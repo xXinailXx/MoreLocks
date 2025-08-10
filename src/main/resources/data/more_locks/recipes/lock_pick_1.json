@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "W": {
+      "item": "more_locks:wire"
+    }
+  },
+  "pattern": [
+    "WW",
+    "W ",
+    "W "
+  ],
+  "result": {
+    "item": "more_locks:lock_pick"
+  }
+}

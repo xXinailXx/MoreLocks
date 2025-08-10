@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "net.xXinailXx.more_locks.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "last_reality.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "LevelRendererMixin"
+  ],
+  "minVersion": "0.8"
+}

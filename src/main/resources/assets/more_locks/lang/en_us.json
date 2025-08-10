@@ -1,0 +1,19 @@
+{
+  "itemGroup.more_locks_tab": "Больше замков",
+
+  "message.more_locks.block_lock": "§cЗаперто! (Уровень: %1$s§c)",
+  "message.more_locks.block_lock.type_0": "§cНовичок",
+  "message.more_locks.block_lock.type_1": "§cНачинающий",
+  "message.more_locks.block_lock.type_2": "§cОпытный",
+  "message.more_locks.block_lock.type_3": "§cМастер",
+  "message.more_locks.block_lock.type_4": "§cПрофессионал",
+
+  "item.more_locks.lock_pick": "Отмычка",
+  "item.more_locks.auto_lock_pick": "Автоотмычка",
+  "item.more_locks.wire": "Проволока",
+  "item.more_locks.copper_lock": "Медный замок",
+  "item.more_locks.iron_lock": "Железный замок",
+  "item.more_locks.gold_lock": "Золотой замок",
+  "item.more_locks.diamond_lock": "Алмазный замок",
+  "item.more_locks.netherite_lock": "Незеритовый замок"
+}
