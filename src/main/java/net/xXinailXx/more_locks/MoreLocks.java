@@ -11,9 +11,12 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.xXinailXx.more_locks.config.MLClientConfig;
 import net.xXinailXx.more_locks.config.MLCommonConfig;
 import net.xXinailXx.more_locks.data.LocksData;
 import net.xXinailXx.more_locks.init.ItemRegistry;
+
+import java.io.File;
 
 @Mod(MoreLocks.MODID)
 public class MoreLocks {
@@ -28,8 +31,19 @@ public class MoreLocks {
         MinecraftForge.EVENT_BUS.register(this);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MLCommonConfig.SPEC, "more_locks-common.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MLClientConfig.SPEC, "more_locks-client.toml");
 
         ItemRegistry.register();
+
+        File file = new File("config" + File.separator + MoreLocks.MODID);
+
+        if (!file.exists()) {
+            try {
+                file.mkdirs();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Mod.EventBusSubscriber

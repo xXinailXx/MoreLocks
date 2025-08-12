@@ -1,7 +1,6 @@
 package net.xXinailXx.more_locks.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
@@ -10,8 +9,6 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.xXinailXx.enderdragonlib.capability.ServerCapManager;
 import net.xXinailXx.more_locks.data.IBlockLocking;
 import net.xXinailXx.more_locks.data.LockSetting;
@@ -25,13 +22,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import oshi.util.tuples.Pair;
 
-@OnlyIn(Dist.CLIENT)
-@Mixin(LevelRenderer.class)
-public class LevelRendererMixin {
-    @Shadow @Final private RenderBuffers renderBuffers;
+@Mixin(GameRenderer.class)
+public class GameRendererMixin {
+    @Shadow @Final private Camera mainCamera;
 
-    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;endBatch(Lnet/minecraft/client/renderer/RenderType;)V", ordinal = 4))
-    public void renderBatched(PoseStack stack, float partialTick, long nanoTime, boolean renderOutline, Camera camera, GameRenderer renderer, LightTexture lightTex, Matrix4f matrix4f, CallbackInfo ci) {
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V", ordinal = 1))
+    public void renderBatched(float partialTick, long nanoTime, PoseStack stack, CallbackInfo ci) {
         Minecraft mc = Minecraft.getInstance();
 
         if (mc.level == null)
@@ -39,8 +35,8 @@ public class LevelRendererMixin {
 
         MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
 
-        for (BlockPos pos : LocksData.LOCKABLES.keySet()) {
-            Pair<IBlockLocking, ItemStack> pair = LocksData.LOCKABLES.get(pos);
+        for (BlockPos pos : LocksData.getLockables().keySet()) {
+            Pair<IBlockLocking, ItemStack> pair = LocksData.getLockables().get(pos);
             LockSetting setting = pair.getA().getDefaultCustomLockSetting(mc.level, pos, mc.level.getBlockState(pos), partialTick);
 
             if (setting == null)
@@ -48,12 +44,12 @@ public class LevelRendererMixin {
 
             stack.pushPose();
 
-            stack.translate(pos.getX() - camera.getPosition().x + setting.pos().x, pos.getY() - camera.getPosition().y + setting.pos().y, pos.getZ() - camera.getPosition().z + setting.pos().z);
+            stack.translate(pos.getX() - this.mainCamera.getPosition().x + setting.pos().x, pos.getY() - this.mainCamera.getPosition().y + setting.pos().y, pos.getZ() - this.mainCamera.getPosition().z + setting.pos().z);
             stack.mulPose(setting.rot());
             stack.scale(0.5F, 0.5F, 0.5F);
 
             if (!(pair.getB().getItem() instanceof LockItem)) {
-                LocksData.LOCKABLES.remove(pos);
+                LocksData.getLockables().remove(pos);
 
                 CompoundTag tag = ServerCapManager.getOrCreateData("more_locks_locks_data");
 
@@ -70,5 +66,7 @@ public class LevelRendererMixin {
         }
 
         source.endBatch();
+
+        LocksData.updateData();
     }
 }

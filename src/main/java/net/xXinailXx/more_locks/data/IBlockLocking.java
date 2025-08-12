@@ -31,7 +31,7 @@ public interface IBlockLocking {
     }
 
     default void unlock(BlockPos pos) {
-        LocksData.LOCKABLES.remove(pos);
+        LocksData.removeLockables(pos);
 
         CompoundTag tag = ServerCapManager.getOrCreateData("more_locks_locks_data");
 

@@ -107,8 +107,8 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
 
-    implementation fg.deobf("curse.maven:jei-238222:4405346")
     implementation fg.deobf("curse.maven:hammerlib-247401:4558470")
+    implementation fg.deobf("curse.maven:jei-238222:4405346")
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.19.2-5.1.6.4")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.19.2-5.1.6.4:api")
 

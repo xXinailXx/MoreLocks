@@ -2,11 +2,11 @@
   "itemGroup.more_locks_tab": "Больше замков",
 
   "message.more_locks.block_lock": "§cЗаперто! (Уровень: %1$s§c)",
-  "message.more_locks.block_lock.type_0": "§cНовичок",
-  "message.more_locks.block_lock.type_1": "§cНачинающий",
-  "message.more_locks.block_lock.type_2": "§cОпытный",
-  "message.more_locks.block_lock.type_3": "§cМастер",
-  "message.more_locks.block_lock.type_4": "§cПрофессионал",
+  "message.more_locks.block_lock.type_copper_lock": "§cНовичок",
+  "message.more_locks.block_lock.type_iron_lock": "§cБывалый",
+  "message.more_locks.block_lock.type_gold_lock": "§cОпытный",
+  "message.more_locks.block_lock.type_diamond_lock": "§cМастер",
+  "message.more_locks.block_lock.type_netherite_lock": "§cПрофессионал",
 
   "item.more_locks.lock_pick": "Отмычка",
   "item.more_locks.auto_lock_pick": "Автоотмычка",

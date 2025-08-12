@@ -6,26 +6,29 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.AbstractChestBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.xXinailXx.enderdragonlib.capability.ServerCapManager;
+import net.xXinailXx.more_locks.api.event.client.LockEvent;
 import net.xXinailXx.more_locks.data.IBlockLocking;
 import net.xXinailXx.more_locks.data.LockSetting;
 import net.xXinailXx.more_locks.data.LocksData;
+import net.xXinailXx.more_locks.item.LockItem;
 import org.zeith.hammerlib.net.IPacket;
 import org.zeith.hammerlib.net.PacketContext;
 import oshi.util.tuples.Pair;
 
 import java.util.List;
+import java.util.Random;
 
 public class AddLockPacket implements IPacket {
     private BlockPos pos;
@@ -52,109 +55,58 @@ public class AddLockPacket implements IPacket {
         BlockState state = level.getBlockState(this.pos);
         Block block = state.getBlock();
         CompoundTag tag = ServerCapManager.getOrCreateData("more_locks_locks_data");
+        ItemStack stack1 = this.stack.copy();
+
+        stack1.setCount(1);
+
+        if (state.isAir())
+            return;
+
+        int min = ((LockItem) this.stack.getItem()).getCountLatches().getA();
+        int max = ((LockItem) this.stack.getItem()).getCountLatches().getB();
+        int count;
+
+        if (min >= max)
+            count = max;
+        else
+            count = new Random().nextInt(min, max);
+
+        CompoundTag tag1 = new CompoundTag();
+
+        tag1.putString("item", ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
+        tag1.putInt("count_latches", count);
+
+        IBlockLocking locking = null;
 
         if (block instanceof IBlockLocking locking1) {
+            locking = locking1;
+
             for (BlockPos pos1 : locking1.poses(this.pos, state)) {
-                tag.putString(String.valueOf(pos1.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
+                tag.put(String.valueOf(pos1.asLong()), tag1);
 
-                LocksData.LOCKABLES.put(pos1, new Pair<>(locking1, stack));
+                LocksData.addLockables(pos1, new Pair<>(locking1, stack1));
             }
-        } else if (block instanceof AbstractChestBlock<?>) {
-            try {
-                ChestType type = state.getValue(BlockStateProperties.CHEST_TYPE);
-                Direction direction = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-                boolean right = type.equals(ChestType.RIGHT);
-
-                if (!type.equals(ChestType.SINGLE)) {
-                    BlockPos neighboringPos = switch (direction) {
-                        case NORTH, DOWN, UP -> type.equals(ChestType.RIGHT) ? this.pos.west() : this.pos.east();
-                        case SOUTH -> type.equals(ChestType.RIGHT) ? this.pos.east() : this.pos.west();
-                        case WEST -> type.equals(ChestType.RIGHT) ? this.pos.south() : this.pos.north();
-                        case EAST -> type.equals(ChestType.RIGHT) ? this.pos.north() : this.pos.south();
-                    };
-
-                    IBlockLocking mainChest = new IBlockLocking() {
-                        public LockSetting getDefaultCustomLockSetting(Level level, BlockPos pos, BlockState state, float partialTick) {
-                            Vec3 vec3 = null;
-
-                            if (state.getValue(BlockStateProperties.CHEST_TYPE).equals(ChestType.RIGHT)) {
-                                vec3 = switch (direction) {
-                                    case NORTH, UP, DOWN -> new Vec3(0, 1.125F, 0.5);
-                                    case SOUTH -> new Vec3(1, 1.125F, 0.5);
-                                    case WEST -> new Vec3(0.5, 1.125F, 1);
-                                    case EAST -> new Vec3(0.5, 1.125F, 0);
-                                };
-                            } else {
-                                vec3 = switch (direction) {
-                                    case NORTH, UP, DOWN -> new Vec3(1, 1.125F, 0.5);
-                                    case SOUTH -> new Vec3(0, 1.125F, 0.5);
-                                    case WEST -> new Vec3(0.5, 1.125F, 0);
-                                    case EAST -> new Vec3(0.5, 1.125F, 1);
-                                };
-                            }
-
-                            return LockSetting.defaultDynamicSetting(level, vec3, state.getBlock().asItem().getDefaultInstance(), partialTick);
-                        }
-
-                        public boolean containsPos(BlockPos pos, BlockPos pos1, BlockState state) {
-                            return pos.equals(pos1) || neighboringPos.equals(pos1);
-                        }
-
-                        public List<BlockPos> poses(BlockPos pos, BlockState state) {
-                            return List.of(pos, neighboringPos);
-                        }
-
-                        public void unlockBlock(Player player, Level level, BlockPos pos, BlockState state, ItemStack lockItem) {
-                            unlock(pos);
-                            unlock(neighboringPos);
-                        }
-                    };
-
-                    tag.putString(String.valueOf(this.pos.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
-                    tag.putString(String.valueOf(neighboringPos.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
-
-                    LocksData.LOCKABLES.put(this.pos, new Pair<>(mainChest, stack));
-                    LocksData.LOCKABLES.put(neighboringPos, new Pair<>(mainChest, stack));
-                } else {
-                    tag.putString(String.valueOf(this.pos.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
-
-                    LocksData.LOCKABLES.put(this.pos, new Pair<>(LockSetting.defaultBlock(), stack));
-                }
-            } catch (Exception e) {
-                tag.putString(String.valueOf(this.pos.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
-
-                LocksData.LOCKABLES.put(this.pos, new Pair<>(LockSetting.defaultBlock(), stack));
-            }
-        } else if (block instanceof TrapDoorBlock) {
-            IBlockLocking locking = LockSetting.defaultBlock();
-
-            tag.putString(String.valueOf(this.pos.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
-
-            LocksData.LOCKABLES.put(this.pos, new Pair<>(locking, stack));
         } else {
-            IBlockLocking locking;
+            locking = LockSetting.defaultBlock();
 
-            try {
-                state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-
-                locking = LockSetting.defaultDoorBlock();
-            } catch (Exception e) {
-                locking = LockSetting.defaultBlock();
-            }
-
-            tag.putString(String.valueOf(pos.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
-            LocksData.LOCKABLES.put(this.pos, new Pair<>(locking, stack));
+            tag.put(String.valueOf(this.pos.asLong()), tag1);
+            LocksData.addLockables(this.pos, new Pair<>(locking, stack1));
 
             for (BlockPos pos1 : locking.poses(this.pos, state)) {
-                tag.putString(String.valueOf(pos1.asLong()), ForgeRegistries.ITEMS.getKey(stack.getItem()).toString());
+                tag.put(String.valueOf(pos1.asLong()), tag1);
 
-                LocksData.LOCKABLES.put(pos1, new Pair<>(locking, stack));
+                LocksData.addLockables(pos1, new Pair<>(locking, stack1));
             }
         }
 
         ServerCapManager.addServerData("more_locks_locks_data", tag);
 
-        if (!player.isCreative())
-            stack.split(1);
+        if (!player.isCreative()) {
+            this.stack.split(1);
+
+            player.setItemSlot(EquipmentSlot.MAINHAND, this.stack);
+        }
+
+        MinecraftForge.EVENT_BUS.post(new LockEvent.Lock(player, this.pos, locking, stack1));
     }
 }

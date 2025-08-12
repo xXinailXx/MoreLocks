@@ -21,17 +21,13 @@ public class LockPickItem extends Item {
     }
 
     public boolean useOnLock(Player player, Level level, BlockPos pos, BlockState state, Pair<IBlockLocking, ItemStack> pair) {
-        int min = ((LockItem) pair.getB().getItem()).getCountLatches().getA();
-        int max = ((LockItem) pair.getB().getItem()).getCountLatches().getB();
-        int count;
+        CompoundTag tag = ServerCapManager.getOrCreateData("more_locks_locks_data");
 
-        if (min >= max)
-            count = max;
-        else
-            count = level.getRandom().nextInt(min, max);
+        if (!tag.contains(String.valueOf(pos.asLong())))
+            return false;
 
         if (level.isClientSide)
-            Minecraft.getInstance().setScreen(new LockScreen(count));
+            Minecraft.getInstance().setScreen(new LockScreen(pos, tag.getCompound(String.valueOf(pos.asLong())).getInt("count_latches")));
 
         return true;
     }

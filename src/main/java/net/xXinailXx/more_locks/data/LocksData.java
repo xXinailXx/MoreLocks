@@ -1,16 +1,19 @@
 package net.xXinailXx.more_locks.data;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractChestBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.xXinailXx.enderdragonlib.capability.ServerCapManager;
 import net.xXinailXx.more_locks.config.MLCommonConfig;
@@ -21,9 +24,41 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class LocksData {
-    public static final Map<BlockPos, Pair<IBlockLocking, ItemStack>> LOCKABLES = new HashMap<>();
+    private static final Map<BlockPos, Pair<IBlockLocking, ItemStack>> LOCKABLES = new HashMap<>();
+    private static final Map<BlockPos, Pair<IBlockLocking, ItemStack>> TEMP_LOCKABLES = new HashMap<>();
+    private static final List<BlockPos> REMOVE_LOCKABLES = new ArrayList<>();
     private static final List<String> blocks = new ArrayList<>();
     private static final List<Pattern> patterns = new ArrayList<>();
+
+    public static void addLockables(BlockPos key, Pair<IBlockLocking, ItemStack> value) {
+        TEMP_LOCKABLES.put(key, value);
+    }
+
+    public static void removeLockables(BlockPos key) {
+        REMOVE_LOCKABLES.add(key);
+    }
+
+    public static void updateData() {
+        LOCKABLES.putAll(TEMP_LOCKABLES);
+
+        for (BlockPos pos : REMOVE_LOCKABLES)
+            LOCKABLES.remove(pos);
+
+        TEMP_LOCKABLES.clear();
+        REMOVE_LOCKABLES.clear();
+    }
+
+    public static Map<BlockPos, Pair<IBlockLocking, ItemStack>> getLockables() {
+        return LOCKABLES;
+    }
+
+    public static Map<BlockPos, Pair<IBlockLocking, ItemStack>> getTempLockables() {
+        return TEMP_LOCKABLES;
+    }
+
+    public static List<BlockPos> getRemoveLockables() {
+        return REMOVE_LOCKABLES;
+    }
 
     public static void readPatterns(Level level) {
         for (String id : MLCommonConfig.LOCKABLE_BLOCKS.get()) {
@@ -39,7 +74,7 @@ public class LocksData {
         CompoundTag tag = ServerCapManager.getOrCreateData("more_locks_locks_data");
 
         for (String key : tag.getAllKeys()) {
-            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(tag.getString(key)));
+            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(tag.getCompound(key).getString("item")));
 
             if (item == null)
                 continue;
@@ -51,17 +86,12 @@ public class LocksData {
             if (state.getBlock() instanceof IBlockLocking locking1) {
                 locking = locking1;
             } else {
-                try {
-                    Half half = state.getValue(BlockStateProperties.HALF);
-                    locking = LockSetting.defaultDoorBlock();
-                } catch (Exception e) {
-                    locking = LockSetting.defaultBlock();
-                }
+                locking = LockSetting.defaultBlock();
             }
 
             locking.setData(tag.getCompound("data"));
 
-            LOCKABLES.put(pos, new Pair<>(locking, item.getDefaultInstance()));
+            addLockables(pos, new Pair<>(locking, item.getDefaultInstance()));
         }
     }
 
@@ -80,10 +110,17 @@ public class LocksData {
     }
 
     @Nullable
-    public static Pair<Boolean, Pair<IBlockLocking, ItemStack>> containsLock(Level level, BlockPos pos) {
-        for (BlockPos pos1 : LOCKABLES.keySet())
-            if (pos1.equals(pos) || LOCKABLES.get(pos1).getA().containsPos(pos, pos1, level.getBlockState(pos)))
-                return new Pair<>(true, LOCKABLES.get(pos));
+    public static Pair<IBlockLocking, ItemStack> containsLock(Level level, BlockPos pos) {
+        Map<BlockPos, Pair<IBlockLocking, ItemStack>> map = LOCKABLES;
+
+        map.putAll(TEMP_LOCKABLES);
+
+        for (BlockPos pos1 : REMOVE_LOCKABLES)
+            map.remove(pos1);
+
+        for (BlockPos pos1 : map.keySet())
+            if (pos1.equals(pos) || map.get(pos1).getA().containsPos(pos, pos1, level.getBlockState(pos)))
+                return map.get(pos);
 
         return null;
     }

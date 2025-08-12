@@ -3,7 +3,7 @@
 
   "message.more_locks.block_lock": "§cЗаперто! (Уровень: %1$s§c)",
   "message.more_locks.block_lock.type_copper_lock": "§cНовичок",
-  "message.more_locks.block_lock.type_iron_lock": "§cНачинающий",
+  "message.more_locks.block_lock.type_iron_lock": "§cБывалый",
   "message.more_locks.block_lock.type_gold_lock": "§cОпытный",
   "message.more_locks.block_lock.type_diamond_lock": "§cМастер",
   "message.more_locks.block_lock.type_netherite_lock": "§cПрофессионал",

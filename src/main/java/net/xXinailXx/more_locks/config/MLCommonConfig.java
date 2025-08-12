@@ -20,8 +20,6 @@ public class MLCommonConfig {
     public static final ForgeConfigSpec.ConfigValue<Integer> DIAMOND_LOCK_MAX_LATCHES;
     public static final ForgeConfigSpec.ConfigValue<Integer> NETHERITE_LOCK_MIN_LATCHES;
     public static final ForgeConfigSpec.ConfigValue<Integer> NETHERITE_LOCK_MAX_LATCHES;
-    public static final ForgeConfigSpec.ConfigValue<Integer> CHANGE_BREAKING_LOCKPICK_SUCCESS;
-    public static final ForgeConfigSpec.ConfigValue<Integer> CHANGE_BREAKING_LOCKPICK_FAIL;
 
     static {
         BUILDER.push("Common config for More Locks");
@@ -49,11 +47,6 @@ public class MLCommonConfig {
 
         NETHERITE_LOCK_MIN_LATCHES = BUILDER.defineInRange("netherite_lock_min", 18, 15, 25);
         NETHERITE_LOCK_MAX_LATCHES = BUILDER.defineInRange("netherite_lock_max", 25, 20, 30);
-
-        BUILDER.comment("");
-
-        CHANGE_BREAKING_LOCKPICK_SUCCESS = BUILDER.comment("The chance that a master lock pick break when the lock latch is opened correctly.").defineInRange("chance_breaking_success", 15, 0, 100);
-        CHANGE_BREAKING_LOCKPICK_FAIL = BUILDER.comment("The chance with which the lock pick can break when the lock latch is opened correctly or incorrectly.").defineInRange("chance_breaking_fail", 95, 0, 100);
 
         BUILDER.pop();
         SPEC = BUILDER.build();
