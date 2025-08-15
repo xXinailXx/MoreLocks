@@ -25,7 +25,6 @@ public class MLCommonConfig {
         BUILDER.push("Common config for More Locks");
 
         LOCKABLE_BLOCKS = BUILDER.comment("Sets which blocks can be locked with a lock.").comment("To add a block to the list of locked ones, you can use a direct link to the block (for example: minecraft:grass_block) or a tag (for example: .*chest).")
-                .comment("To customize the display of the lock, use the additional file - locks_setting.json.")
                 .defineList("lockable_blocks", Lists.newArrayList(".*chest", ".*barrel", ".*door", ".*trapdoor", ".*shulker_box", ".*hopper", ".*fence_gate"), tag -> tag instanceof String);
 
         BUILDER.comment("");
@@ -45,8 +44,8 @@ public class MLCommonConfig {
         DIAMOND_LOCK_MIN_LATCHES = BUILDER.defineInRange("diamond_lock_min", 12, 8, 15);
         DIAMOND_LOCK_MAX_LATCHES = BUILDER.defineInRange("diamond_lock_max", 15, 10, 20);
 
-        NETHERITE_LOCK_MIN_LATCHES = BUILDER.defineInRange("netherite_lock_min", 18, 15, 25);
-        NETHERITE_LOCK_MAX_LATCHES = BUILDER.defineInRange("netherite_lock_max", 25, 20, 30);
+        NETHERITE_LOCK_MIN_LATCHES = BUILDER.defineInRange("netherite_lock_min", 18, 15, 22);
+        NETHERITE_LOCK_MAX_LATCHES = BUILDER.defineInRange("netherite_lock_max", 22, 20, 27);
 
         BUILDER.pop();
         SPEC = BUILDER.build();

@@ -1,20 +1,14 @@
 package net.xXinailXx.more_locks.network.packet;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.ChestType;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.xXinailXx.enderdragonlib.capability.ServerCapManager;
@@ -27,7 +21,6 @@ import org.zeith.hammerlib.net.IPacket;
 import org.zeith.hammerlib.net.PacketContext;
 import oshi.util.tuples.Pair;
 
-import java.util.List;
 import java.util.Random;
 
 public class AddLockPacket implements IPacket {

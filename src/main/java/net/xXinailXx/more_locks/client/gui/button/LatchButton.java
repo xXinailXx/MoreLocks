@@ -20,11 +20,10 @@ public class LatchButton extends AbstractWidget {
     }
 
     public void renderButton(PoseStack stack, int pMouseX, int pMouseY, float pPartialTick) {
-        Pair<Boolean, Integer> pair = this.screen.getLatchesRots().get(this.latchAmount);
-
         TextureManager manager = this.MC.getTextureManager();
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 
+        Pair<Boolean, Integer> pair = this.screen.getLatchesRots().get(this.latchAmount);
         Pair<Integer, Integer> texSize = this.screen.getTexSize(MLClientConfig.MENU_TYPE.get().concat(pair.getA() ? "_latch_unblocking" : "_latch_blocking"));
 
         if (!pair.getA()) {
@@ -35,10 +34,12 @@ public class LatchButton extends AbstractWidget {
             manager.bindForSetup(this.screen.getTexLocation(MLClientConfig.MENU_TYPE.get().concat("_latch_unblocking")));
         }
 
+        int rot = this.screen.getLatchesRots().get(this.latchAmount).getB();
+
         stack.pushPose();
-        stack.translate(this.x + 0.5, this.y - 0.5, 0);
-        stack.mulPose(Vector3f.ZN.rotationDegrees(this.screen.getLatchesRots().get(this.latchAmount).getB()));
-        stack.translate(-4, 4, 0);
+        stack.translate(this.x - 0.5, this.y - 0.5, 0);
+        stack.mulPose(Vector3f.ZN.rotationDegrees(rot));
+        stack.translate(-4, 0, 0);
 
         blit(stack, 0, 0, 0, 0, texSize.getA(), texSize.getB(), texSize.getA(), texSize.getB());
 

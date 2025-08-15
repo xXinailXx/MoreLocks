@@ -12,6 +12,9 @@ public class BreakingLockPickPacket implements IPacket {
     public void serverExecute(PacketContext ctx) {
         ServerPlayer player = ctx.getSender();
 
+        if (player.isCreative())
+            return;
+
         ItemStack stack = null;
 
         if (player.getMainHandItem().getItem() instanceof LockPickItem && !(player.getMainHandItem().getItem() instanceof AutoLockPickItem)) {

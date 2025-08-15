@@ -1,7 +1,6 @@
 package net.xXinailXx.more_locks.item;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -20,15 +19,11 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.xXinailXx.more_locks.MoreLocks;
 import net.xXinailXx.more_locks.api.event.client.LockEvent;
-import net.xXinailXx.more_locks.config.MLClientConfig;
-import net.xXinailXx.more_locks.config.MLCommonConfig;
 import net.xXinailXx.more_locks.data.LocksData;
 import net.xXinailXx.more_locks.data.IBlockLocking;
 import net.xXinailXx.more_locks.network.packet.AddLockPacket;
 import org.zeith.hammerlib.net.Network;
 import oshi.util.tuples.Pair;
-
-import java.util.Random;
 
 @Mod.EventBusSubscriber
 public abstract class LockItem extends Item {

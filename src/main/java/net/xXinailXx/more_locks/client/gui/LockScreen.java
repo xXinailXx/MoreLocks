@@ -8,18 +8,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.xXinailXx.enderdragonlib.utils.MathUtils;
-import net.xXinailXx.enderdragonlib.utils.ResourceLocationUtils;
+import net.xXinailXx.enderdragonlib.utils.FileUtils;
 import net.xXinailXx.more_locks.MoreLocks;
 import net.xXinailXx.more_locks.client.gui.button.LatchButton;
 import net.xXinailXx.more_locks.config.MLClientConfig;
-import net.xXinailXx.more_locks.init.ItemRegistry;
 import net.xXinailXx.more_locks.item.AutoLockPickItem;
 import net.xXinailXx.more_locks.item.LockPickItem;
 import net.xXinailXx.more_locks.network.packet.BreakingLockPickPacket;
@@ -40,20 +38,18 @@ public class LockScreen extends Screen {
     private final List<Pair<Boolean, Integer>> latchesRots = new ArrayList<>();
     private final List<LatchRotSetting> latches = new ArrayList<>();
     private final BlockPos pos;
-    private final int countLocks;
+    private int lockPickRot = 0;
     private int unblockingLatch = 0;
-    public int lockPickRot = 0;
     private boolean reverse = false;
-    private boolean error = false;
+    private boolean unblocking = false;
 
     public LockScreen(BlockPos pos, int countLatches) {
         super(Component.empty());
         this.pos = pos;
-        this.countLocks = countLatches;
 
         Random random = new Random();
 
-        for (int i = 0; i < this.countLocks; i++) {
+        for (int i = 0; i < countLatches; i++) {
             if (this.latchesRots.isEmpty()) {
                 int rot = random.nextInt(0, 360);
 
@@ -63,10 +59,10 @@ public class LockScreen extends Screen {
                 continue;
             }
 
-            int randomRot = random.nextInt(0, 361);
+            int randomRot = random.nextInt(0, 360);
 
-            while (!successRot(randomRot)) {
-                randomRot = random.nextInt(0, 361);
+            while (!successRot(new LatchRotSetting(randomRot))) {
+                randomRot = random.nextInt(0, 360);
             }
 
             this.latchesRots.add(new Pair<>(false, randomRot));
@@ -75,22 +71,28 @@ public class LockScreen extends Screen {
     }
 
     public void tick() {
-        if (this.lockPickRot + (3  * (this.reverse ? -1 : 1)) >= 360)
-            this.lockPickRot = this.lockPickRot + (3  * (this.reverse ? -1 : 1)) - 360;
-        else if (this.lockPickRot + (3  * (this.reverse ? -1 : 1)) < 0)
-            this.lockPickRot = 360 + this.lockPickRot + (3  * (this.reverse ? -1 : 1));
+        if (!hasLockPick()) {
+            this.onClose();
+
+            return;
+        }
+
+        int extraRot = ((this.reverse ? -1 : 1) + (MLClientConfig.IS_ACCELERATION.get() ? this.unblockingLatch * MLClientConfig.CHANGE_ACCELERATION.get() : 0));
+
+        if (this.lockPickRot + extraRot >= 360)
+            this.lockPickRot = this.lockPickRot + extraRot - 360;
+        else if (this.lockPickRot + extraRot < 0)
+            this.lockPickRot = 360 + this.lockPickRot + extraRot;
         else
             this.lockPickRot += (3 * (this.reverse ? -1 : 1));
     }
 
     protected void init() {
+        int x = this.width / 2;
         int y = this.height / 2;
 
-        for (int i = 0; i < this.latches.size(); i++) {
-            int x = (this.width - getTexSize(MLClientConfig.MENU_TYPE.get().concat(this.latchesRots.get(i).getA() ? "_latch_unblocking" : "_latch_blocking")).getA()) / 2 + 3;
-
+        for (int i = 0; i < this.latches.size(); i++)
             this.addRenderableWidget(new LatchButton(x, y, i, this));
-        }
     }
 
     public void render(PoseStack stack, int pMouseX, int pMouseY, float pPartialTick) {
@@ -112,9 +114,9 @@ public class LockScreen extends Screen {
         Pair<Integer, Integer> lockPickPair = getTexSize(MLClientConfig.MENU_TYPE.get().concat("_lock_pick"));
 
         stack.pushPose();
-        stack.translate((double) (this.width - lockPickPair.getA()) / 2 + 3.5, (double) this.height / 2 - 0.5, 0);
-        stack.mulPose(Vector3f.ZN.rotationDegrees((float) (this.lockPickRot * (this.unblockingLatch == 0 ? 1 : this.unblockingLatch * MLClientConfig.CHANGE_ACCELERATION.get()))));
-        stack.translate(-2, -2, 0);
+        stack.translate((double) this.width / 2, (double) this.height / 2 - 0.5, 0);
+        stack.mulPose(Vector3f.ZN.rotationDegrees(this.lockPickRot));
+        stack.translate(-lockPickPair.getA() / 2, -2, 0);
 
         blit(stack, 0, 0, 0, 0, lockPickPair.getA(), lockPickPair.getB(), lockPickPair.getA(), lockPickPair.getB());
 
@@ -136,7 +138,6 @@ public class LockScreen extends Screen {
                     success = true;
 
                     this.latchesRots.set(i, new Pair<>(true, pair.getB()));
-                    this.lockPickRot *= MLClientConfig.CHANGE_ACCELERATION.get();
 
                     this.rebuildWidgets();
 
@@ -147,22 +148,17 @@ public class LockScreen extends Screen {
             if (MathUtils.isRandom(this.MC.level, success ? MLClientConfig.CHANGE_BREAKING_LOCKPICK_SUCCESS.get() : MLClientConfig.CHANGE_BREAKING_LOCKPICK_FAIL.get()))
                 Network.sendToServer(new BreakingLockPickPacket());
 
-            if (!hasLockPick()) {
-                this.error = true;
-
-                this.onClose();
-
-                return false;
-            }
-
             int unblocking = 0;
 
             for (Pair<Boolean, Integer> pair : this.latchesRots)
                 if (pair.getA())
                     unblocking++;
 
-            if (unblocking == this.latches.size())
+            if (unblocking == this.latches.size()) {
+                this.unblocking = true;
+
                 this.onClose();
+            }
         }
 
         return super.mouseClicked(pMouseX, pMouseY, clickType);
@@ -197,7 +193,7 @@ public class LockScreen extends Screen {
     public void onClose() {
         super.onClose();
 
-        if (!this.error)
+        if (this.unblocking)
             Network.sendToServer(new UnblockingBlockPacket(this.pos));
     }
 
@@ -205,26 +201,26 @@ public class LockScreen extends Screen {
         if (MLClientConfig.MENU_TYPE.get().equals("default_0") || MLClientConfig.MENU_TYPE.get().equals("default_1"))
             return new ResourceLocation(MoreLocks.MODID, "textures/gui/" + texName + ".png");
         else
-            return ResourceLocationUtils.getImageRL(MoreLocks.MODID, new File("config" + File.separator + MoreLocks.MODID + File.separator + MLClientConfig.MENU_TYPE.get(), texName + ".png"));
+            return FileUtils.getImageRL(MoreLocks.MODID, new File("config" + File.separator + MoreLocks.MODID + File.separator + MLClientConfig.MENU_TYPE.get(), texName + ".png"));
     }
 
     public Pair<Integer, Integer> getTexSize(String texName) {
         if (texName.contains("default_0")) {
             if (texName.contains("_background"))
-                return new Pair<>(121, 121);
+                return new Pair<>(131, 131);
             else if (texName.contains("_latch_blocking"))
-                return new Pair<>(7, 50);
+                return new Pair<>(7, 58);
             else if (texName.contains("_latch_unblocking"))
-                return new Pair<>(7, 50);
+                return new Pair<>(7, 58);
             else
-                return new Pair<>(7, 40);
+                return new Pair<>(9, 47);
         } else if (texName.contains("default_1")) {
             if (texName.contains("_background"))
                 return new Pair<>(126, 126);
             else if (texName.contains("_latch_blocking"))
-                return new Pair<>(7, 39);
+                return new Pair<>(4, 50);
             else if (texName.contains("_latch_unblocking"))
-                return new Pair<>(7, 39);
+                return new Pair<>(4, 50);
             else
                 return new Pair<>(6, 45);
         } else {
@@ -238,10 +234,11 @@ public class LockScreen extends Screen {
         }
     }
 
-    private boolean successRot(int rot) {
+    private boolean successRot(LatchRotSetting tempRot) {
         for (LatchRotSetting r : this.latches)
-            if (r.list.contains(rot))
-                return false;
+            for (int rot : r.getList())
+                if (tempRot.getList().contains(rot))
+                    return false;
 
         return true;
     }
@@ -250,23 +247,22 @@ public class LockScreen extends Screen {
         return false;
     }
 
+    @Getter
     private static class LatchRotSetting {
         private final List<Integer> list;
-        private final int rot;
 
         private LatchRotSetting(int rot) {
             List<Integer> list1 = new ArrayList<>();
 
-            for (int i = 1; i < 5; i++)
-                list1.add(rot - i < 0 ? 360 - rot - i : rot - i);
+            for (int i = 1; i < 6; i++)
+                list1.add(rot - i < 0 ? 360 - (rot - i) : rot - i);
 
             list1.add(rot);
 
-            for (int i = 1; i < 5; i++)
+            for (int i = 1; i < 6; i++)
                 list1.add(rot + i >= 360 ? rot + i - 360 : rot + i);
 
             this.list = list1;
-            this.rot = rot;
         }
     }
 }

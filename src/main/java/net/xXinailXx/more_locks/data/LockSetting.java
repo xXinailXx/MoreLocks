@@ -102,10 +102,10 @@ public record LockSetting(Vec3 pos, Quaternion rot) {
 
                             if (type.equals(ChestType.RIGHT)) {
                                 Vec3 vec3 = switch (direction) {
-                                    case NORTH, UP, DOWN -> new Vec3(0, 1.125F, 0.5);
-                                    case SOUTH -> new Vec3(1, 1.125F, 0.5);
-                                    case WEST -> new Vec3(0.5, 1.125F, 1);
-                                    case EAST -> new Vec3(0.5, 1.125F, 0);
+                                    case NORTH, UP, DOWN -> new Vec3(0, 1, 0.5);
+                                    case SOUTH -> new Vec3(1, 1, 0.5);
+                                    case WEST -> new Vec3(0.5, 1, 1);
+                                    case EAST -> new Vec3(0.5, 1, 0);
                                 };
 
                                 return LockSetting.defaultDynamicSetting(level, vec3, state.getBlock().asItem().getDefaultInstance(), partialTick);
@@ -125,10 +125,10 @@ public record LockSetting(Vec3 pos, Quaternion rot) {
 
                         if (head) {
                             Vec3 vec3 = switch (direction) {
-                                case NORTH, UP, DOWN -> new Vec3(0.5, 1.125F, 1);
-                                case SOUTH -> new Vec3(0.5, 1.125F, 0);
-                                case WEST -> new Vec3(1, 1.125F, 0.5);
-                                case EAST -> new Vec3(0, 1.125F, 0.5);
+                                case NORTH, UP, DOWN -> new Vec3(0.5, 1, 1);
+                                case SOUTH -> new Vec3(0.5, 1, 0);
+                                case WEST -> new Vec3(1, 1, 0.5);
+                                case EAST -> new Vec3(0, 1, 0.5);
                             };
 
                             return LockSetting.defaultDynamicSetting(level, vec3, state.getBlock().asItem().getDefaultInstance(), partialTick);
@@ -299,16 +299,16 @@ public record LockSetting(Vec3 pos, Quaternion rot) {
 
     public static LockSetting defaultDynamicSetting(Level level, ItemStack stack, float partialTick) {
         BakedModel bakedmodel = Minecraft.getInstance().getItemRenderer().getModel(stack, level, null, 0);
-        Vec3 vec3 = new Vec3(0.5, 1.125F + bakedmodel.getTransforms().getTransform(ItemTransforms.TransformType.FIXED).scale.y() + Math.sin((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0)) * 0.15F) * 0.1F, 0.5);
+        Vec3 vec3 = new Vec3(0.5, 0.5 + bakedmodel.getTransforms().getTransform(ItemTransforms.TransformType.FIXED).scale.y() + Math.sin((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0)) * 0.15) * 0.1, 0.5);
 
-        return new LockSetting(vec3, Vector3f.YP.rotationDegrees((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0F) + level.getRandom().nextFloat()) * 2));
+        return new LockSetting(vec3, Vector3f.YP.rotationDegrees((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0) + level.getRandom().nextFloat()) * 2));
     }
 
     public static LockSetting defaultDynamicSetting(Level level, Vec3 vec3, ItemStack stack, float partialTick) {
         BakedModel bakedmodel = Minecraft.getInstance().getItemRenderer().getModel(stack, level, null, 0);
-        Vec3 vec = new Vec3(vec3.x, vec3.y + bakedmodel.getTransforms().getTransform(ItemTransforms.TransformType.FIXED).scale.y() + Math.sin((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0)) * 0.15F) * 0.1F, vec3.z);
+        Vec3 vec = new Vec3(vec3.x, vec3.y + bakedmodel.getTransforms().getTransform(ItemTransforms.TransformType.FIXED).scale.y() + Math.sin((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0)) * 0.15) * 0.1, vec3.z);
 
-        return new LockSetting(vec, Vector3f.YP.rotationDegrees((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0F)) * 2 + level.getRandom().nextFloat()));
+        return new LockSetting(vec, Vector3f.YP.rotationDegrees((partialTick + (Minecraft.getInstance().player != null ? Minecraft.getInstance().player.tickCount : 0)) * 2 + level.getRandom().nextFloat()));
     }
 }
 
