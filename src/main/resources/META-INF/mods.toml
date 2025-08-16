@@ -21,3 +21,9 @@ mandatory=true
 versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
+[[dependencies.more_locks]]
+modId="enderdragonlib"
+mandatory=true
+versionRange="[0.1.0,)"
+ordering="NONE"
+side="BOTH"
