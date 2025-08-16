@@ -34,16 +34,6 @@ public class MoreLocks {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MLClientConfig.SPEC, "more_locks-client.toml");
 
         ItemRegistry.register();
-
-        File file = new File("config" + File.separator + MoreLocks.MODID);
-
-        if (!file.exists()) {
-            try {
-                file.mkdirs();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     @Mod.EventBusSubscriber
