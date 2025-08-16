@@ -10,7 +10,6 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.xXinailXx.enderdragonlib.utils.MathUtils;
@@ -38,7 +37,7 @@ public class LockScreen extends Screen {
     private final List<Pair<Boolean, Integer>> latchesRots = new ArrayList<>();
     private final List<LatchRotSetting> latches = new ArrayList<>();
     private final BlockPos pos;
-    private int lockPickRot = 0;
+    private float lockPickRot = 0;
     private int unblockingLatch = 0;
     private boolean reverse = false;
     private boolean unblocking = false;
@@ -77,7 +76,7 @@ public class LockScreen extends Screen {
             return;
         }
 
-        int extraRot = ((this.reverse ? -1 : 1) + (MLClientConfig.IS_ACCELERATION.get() ? this.unblockingLatch * MLClientConfig.CHANGE_ACCELERATION.get() : 0));
+        float extraRot = ((this.reverse ? -1 : 1) * MLClientConfig.CHANGE_BASE_ACCELERATION.get());
 
         if (this.lockPickRot + extraRot >= 360)
             this.lockPickRot = this.lockPickRot + extraRot - 360;
@@ -116,7 +115,7 @@ public class LockScreen extends Screen {
         stack.pushPose();
         stack.translate((double) this.width / 2, (double) this.height / 2 - 0.5, 0);
         stack.mulPose(Vector3f.ZN.rotationDegrees(this.lockPickRot));
-        stack.translate(-lockPickPair.getA() / 2, -2, 0);
+        stack.translate((double) - lockPickPair.getA() / 2, -2, 0);
 
         blit(stack, 0, 0, 0, 0, lockPickPair.getA(), lockPickPair.getB(), lockPickPair.getA(), lockPickPair.getB());
 
@@ -133,9 +132,10 @@ public class LockScreen extends Screen {
                 if (pair.getA())
                     continue;
 
-                if (this.latches.get(i).list.contains(this.lockPickRot)) {
+                if (this.latches.get(i).list.contains((int) this.lockPickRot)) {
                     this.reverse = !this.reverse;
                     success = true;
+                    this.unblockingLatch++;
 
                     this.latchesRots.set(i, new Pair<>(true, pair.getB()));
 
